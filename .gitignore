@@ -1,0 +1,14 @@
+.DS_STORE
+.env
+.testing/
+.release/
+.dev_logs/
+logs/
+*.txt
+*.json
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.doc
+*.docx

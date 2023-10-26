@@ -1,0 +1,24 @@
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./main.go
+
+    ldflags:
+      - -s -w -X github.com/devusSs/minio-link/cmd.BuildVersion={{.Version}} -X github.com/devusSs/minio-link/cmd.BuildDate={{.Date}} -X github.com/devusSs/minio-link/cmd.BuildGitCommit={{.Commit}}
+
+    goos:
+      - darwin
+      - linux
+      - windows
+
+    goarch:
+      - amd64
+      - arm64
+
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
