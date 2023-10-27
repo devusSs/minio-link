@@ -1,6 +1,6 @@
 # Roadmap for minio-link
 
-## Last update: 26th October 2023
+## Last update: 27th October 2023
 
-- folder structure depending on mime type of uploaded object
-- download function
+- folder structure depending on mime type of uploaded or downloaded object
+- more structured / sensible logging for the subfunctions (in internal packages)
