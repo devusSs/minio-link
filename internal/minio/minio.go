@@ -3,7 +3,9 @@ package minio
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gabriel-vasile/mimetype"
@@ -12,12 +14,10 @@ import (
 	credentials "github.com/minio/minio-go/v7/pkg/credentials"
 
 	"github.com/devusSs/minio-link/internal/config/environment"
-	"github.com/devusSs/minio-link/pkg/log"
 )
 
 // Wrapper around minio library
 type MinioClient struct {
-	logger        *log.Logger
 	client        *miniolib.Client
 	bucketName    string
 	bucketRegion  string
@@ -31,18 +31,14 @@ func (c *MinioClient) UploadFile(
 	filePath string,
 	public bool,
 ) (string, error) {
-	c.logger.Debug(fmt.Sprintf("trying to upload file %s", filepath.Base(filePath)))
 	if err := c.createBucket(ctx, public); err != nil {
-		c.logger.Error(err.Error())
 		return "", err
 	}
 	contentType, err := findContentType(filePath)
 	if err != nil {
-		c.logger.Error(fmt.Sprintf("failed to get mime type: %s", err.Error()))
 		return "", fmt.Errorf("failed to get mime type: %w", err)
 	}
-	c.logger.Debug(fmt.Sprintf("set content type: %s", contentType))
-	fileName := randomiseFileName(filePath)
+	fileName := randomiseFileName(filePath) + filepath.Ext(filePath)
 	info, err := c.client.FPutObject(
 		ctx,
 		c.bucketName,
@@ -51,25 +47,35 @@ func (c *MinioClient) UploadFile(
 		miniolib.PutObjectOptions{ContentType: contentType},
 	)
 	if err != nil {
-		c.logger.Error(fmt.Sprintf("failed to upload file: %s", err.Error()))
 		return "", fmt.Errorf("failed to upload file: %w", err)
 	}
-	c.logger.Debug(
-		fmt.Sprintf(
-			"upload done, bucket: %s, name: %s, tag: %s, size: %d",
-			info.Bucket,
-			info.Key,
-			info.ETag,
-			info.Size,
-		),
-	)
 	if public {
 		baseURL := c.client.EndpointURL().String()
 		finalURL := fmt.Sprintf("%s/%s/%s", baseURL, c.bucketName, info.Key)
-		c.logger.Debug(fmt.Sprintf("public share url: %s", finalURL))
 		return finalURL, nil
 	}
 	return c.getPrivateShareLink(ctx, fileName)
+}
+
+// DownloadFile downloads a file from minio by the given input url,
+// if customPath = "" file path will be the same as the URL object path
+func (c *MinioClient) DownloadFile(ctx context.Context, input string, customPath string) error {
+	u, err := url.Parse(input)
+	if err != nil {
+		return fmt.Errorf("failed to parse url: %w", err)
+	}
+	path := u.EscapedPath()
+	pathSplit := strings.Split(path, "/")
+	bucketName := pathSplit[1]
+	objectName := pathSplit[2]
+	if bucketName == "" || objectName == "" {
+		return fmt.Errorf("invalid url, could not fetch bucket or object name")
+	}
+	if customPath == "" {
+		customPath = "./files/" + objectName
+	}
+	err = c.client.FGetObject(ctx, bucketName, objectName, customPath, miniolib.GetObjectOptions{})
+	return err
 }
 
 func (c *MinioClient) setBucketPublic(ctx context.Context, policy string) error {
@@ -77,14 +83,12 @@ func (c *MinioClient) setBucketPublic(ctx context.Context, policy string) error 
 	if err != nil {
 		return fmt.Errorf("setting bucket policy: %w", err)
 	}
-	c.logger.Debug(fmt.Sprintf("set bucket %s policy to public", c.bucketName))
 	return nil
 }
 
 func (c *MinioClient) createBucket(ctx context.Context, public bool) error {
 	if !public {
 		c.bucketName += "-private"
-		c.logger.Debug("using private bucket")
 	}
 	exists, err := c.client.BucketExists(ctx, c.bucketName)
 	if err != nil {
@@ -98,16 +102,12 @@ func (c *MinioClient) createBucket(ctx context.Context, public bool) error {
 		if err != nil {
 			return fmt.Errorf("failed to create bucket: %w", err)
 		}
-		c.logger.Debug(fmt.Sprintf("created bucket %s", c.bucketName))
-	} else {
-		c.logger.Warn(fmt.Sprintf("bucket %s already exists", c.bucketName))
 	}
 	if public {
 		err := c.setBucketPublic(ctx, fmt.Sprintf(bucketPolicyPublic, c.bucketName))
 		if err != nil {
 			return fmt.Errorf("failed to set bucket policy: %w", err)
 		}
-		c.logger.Debug("set bucket policy to public")
 	}
 	return nil
 }
@@ -136,11 +136,6 @@ func NewClient(dir string, debug bool, cfg *environment.EnvConfig) (*MinioClient
 		return nil, fmt.Errorf("failed to create minio client: %w", err)
 	}
 	return &MinioClient{
-		logger: log.NewLogger().
-			WithDirectory(dir).
-			WithName("minio").
-			WithDebug(debug).
-			WithConsoleOutput(debug),
 		client:        mClient,
 		bucketName:    cfg.MinioBucketName,
 		bucketRegion:  cfg.MinioRegion,

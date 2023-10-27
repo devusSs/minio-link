@@ -11,13 +11,11 @@ import (
 	"time"
 
 	"github.com/devusSs/minio-link/internal/config/environment"
-	"github.com/devusSs/minio-link/pkg/log"
 	"github.com/google/uuid"
 )
 
 // Wrapper for YOURLS API (basic)
 type YOURLSClient struct {
-	logger    *log.Logger
 	client    *http.Client
 	baseURL   string
 	signature string
@@ -70,14 +68,53 @@ func (c *YOURLSClient) ShortenURL(ctx context.Context, input string) (string, er
 	return shortenRes.Shorturl, nil
 }
 
+func (c *YOURLSClient) ExpandURL(ctx context.Context, input string) (string, error) {
+	_, err := checkURL(input)
+	if err != nil {
+		return "", fmt.Errorf("invalid input url: %w", err)
+	}
+
+	u, err := checkURL(fmt.Sprintf("%s/%s", c.baseURL, defaultAPIEndpoint))
+	if err != nil {
+		return "", fmt.Errorf("invalid base url: %w", err)
+	}
+
+	v := make(map[string]string)
+	v["signature"] = c.signature
+	v["action"] = "expand"
+	v["format"] = "json"
+	v["shorturl"] = input
+
+	req, err := buildRequestWithContext(ctx, http.MethodPost, u.String(), createPostRequestBody(v))
+	if err != nil {
+		return "", fmt.Errorf("failed to build request: %w", err)
+	}
+
+	res, err := c.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		var errRes shortenURLErrorResponse
+		if err := unmarshalResponseToJSON(res, &errRes); err != nil {
+			return "", fmt.Errorf("failed to unmarshal response: %w", err)
+		}
+		return "", fmt.Errorf("failed to shorten url: %s", errRes.Message)
+	}
+
+	var expandRes expandURLResponse
+	if err := unmarshalResponseToJSON(res, &expandRes); err != nil {
+		return "", fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return expandRes.Longurl, nil
+}
+
 // NewClient creates a new YOURLSClient
 func NewClient(dir string, debug bool, cfg *environment.EnvConfig) *YOURLSClient {
 	return &YOURLSClient{
-		logger: log.NewLogger().
-			WithDirectory(dir).
-			WithName("yourls").
-			WithDebug(debug).
-			WithConsoleOutput(debug),
 		client:    &http.Client{Timeout: 5 * time.Second},
 		baseURL:   cfg.YourlsEndpoint,
 		signature: cfg.YourlsSignatureKey,
@@ -151,5 +188,14 @@ type shortenURLResponse struct {
 	Message    string `json:"message"`
 	Title      string `json:"title"`
 	Shorturl   string `json:"shorturl"`
+	StatusCode int    `json:"statusCode"`
+}
+
+type expandURLResponse struct {
+	Keyword    string `json:"keyword"`
+	Shorturl   string `json:"shorturl"`
+	Longurl    string `json:"longurl"`
+	Title      string `json:"title"`
+	Message    string `json:"message"`
 	StatusCode int    `json:"statusCode"`
 }
