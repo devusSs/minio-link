@@ -4,6 +4,7 @@
 .release/
 .dev_logs/
 logs/
+files/
 *.txt
 *.json
 *.png

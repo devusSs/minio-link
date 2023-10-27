@@ -63,15 +63,15 @@ dev-private-upload: build
 	@-mkdir ./.testing
 	@cp ./.release/minio-link_$(BUILD_OS)_$(BUILD_ARCH)/minio-link ./.testing/minio-link
 	@clear
-	@./.testing/minio-link upload test-file.txt -c="./.env" -l="./.logs_dev" -d -p
+	@./.testing/minio-link upload ./test-file.txt -c="./.env" -l="./.logs_dev" -d -p
 
 # DO NOT CHANGE.
 dev-download: build
 	@-mkdir ./.testing
 	@cp ./.release/minio-link_$(BUILD_OS)_$(BUILD_ARCH)/minio-link ./.testing/minio-link
 	@clear
-	@./.testing/minio-link download -c="./.env" -l="./.logs_dev" -d -f="./test-file.txt"
-	
+	@./.testing/minio-link download ${TEST_DOWNLOAD_LINK} -c="./.env" -l="./.logs_dev" -d
+
 # DO NOT CHANGE.
 check:
 	@echo "Checking for potential errors, unused vars, etc."
@@ -91,5 +91,6 @@ clean: check
 	@rm -rf ./.testing
 	@rm -rf ./.release
 	@rm -rf ./logs
+	@rm -rf ./files
 	@rm -rf ./.logs_dev
 	@clear
