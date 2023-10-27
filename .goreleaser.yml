@@ -5,6 +5,9 @@ before:
 builds:
   - main: ./main.go
 
+    flags:
+        - -trimpath
+
     ldflags:
       - -s -w -X github.com/devusSs/minio-link/cmd.BuildVersion={{.Version}} -X github.com/devusSs/minio-link/cmd.BuildDate={{.Date}} -X github.com/devusSs/minio-link/cmd.BuildGitCommit={{.Commit}}
 
