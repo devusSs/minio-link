@@ -1,6 +1,3 @@
-# Update the version to your needs via env / shell.
-BUILD_VERSION=${LINK_BUILD_VERSION}
-
 # DO NOT CHANGE.
 BUILD_OS 				:=
 ifeq ($(OS),Windows_NT)
@@ -34,7 +31,7 @@ build:
 	@[ "${LINK_BUILD_VERSION}" ] || ( echo "LINK_BUILD_VERSION is not set"; exit 1 )
 	@echo "Compiling app for $(BUILD_OS) ($(BUILD_ARCH))..."
 	@go mod tidy
-	@CGO_ENABLED=0 GOOS=$(BUILD_OS) GOARCH=$(BUILD_ARCH) go build -v -trimpath -ldflags="-s -w -X 'github.com/devusSs/minio-link/cmd.BuildVersion=$(BUILD_VERSION)' -X 'github.com/devusSs/minio-link/cmd.BuildDate=${shell date}' -X 'github.com/devusSs/minio-link/cmd.BuildGitCommit=${shell git rev-parse HEAD}'" -o ./.release/minio-link_$(BUILD_OS)_$(BUILD_ARCH)/ ./...
+	@CGO_ENABLED=0 GOOS=$(BUILD_OS) GOARCH=$(BUILD_ARCH) go build -v -trimpath -ldflags="-s -w -X 'github.com/devusSs/minio-link/cmd.BuildVersion=${LINK_BUILD_VERSION}' -X 'github.com/devusSs/minio-link/cmd.BuildDate=${shell date}' -X 'github.com/devusSs/minio-link/cmd.BuildGitCommit=${shell git rev-parse HEAD}'" -o ./.release/minio-link_$(BUILD_OS)_$(BUILD_ARCH)/ ./...
 	@echo "Done building app"
 
 # DO NOT CHANGE.
