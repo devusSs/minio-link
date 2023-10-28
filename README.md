@@ -57,8 +57,6 @@ If you want to build the app yourself you will need the following tools:
 - The [Go](https://go.dev) programming language to compile the app.
 - The [Make](https://www.gnu.org/software/make/) toolchain to make it easier compiling the program.
 
-You can then use the `set_dev.sh` (e.g. `source set_dev.sh`) file to simplify setting up a building / testing environment with a custom version number.
-
 The `Makefile` includes useful functions for building and testing. If do not know how to use the `make` tool please either use a precompiled binary or refrain from using this program.
 
 ## Future plans
