@@ -14,10 +14,12 @@ import (
 	credentials "github.com/minio/minio-go/v7/pkg/credentials"
 
 	"github.com/devusSs/minio-link/internal/config/environment"
+	"github.com/devusSs/minio-link/pkg/log"
 )
 
 // Wrapper around minio library
 type MinioClient struct {
+	logger        *log.Logger
 	client        *miniolib.Client
 	bucketName    string
 	bucketRegion  string
@@ -31,6 +33,7 @@ func (c *MinioClient) UploadFile(
 	filePath string,
 	public bool,
 ) (string, error) {
+	c.logger.Debug(fmt.Sprintf("trying to upload file: %s (public: %t)", filePath, public))
 	if err := c.createBucket(ctx, public); err != nil {
 		return "", err
 	}
@@ -38,7 +41,9 @@ func (c *MinioClient) UploadFile(
 	if err != nil {
 		return "", fmt.Errorf("failed to get mime type: %w", err)
 	}
+	c.logger.Debug(fmt.Sprintf("got content type: %s", contentType))
 	fileName := randomiseFileName(filePath) + filepath.Ext(filePath)
+	c.logger.Debug(fmt.Sprintf("generated file name: %s", fileName))
 	info, err := c.client.FPutObject(
 		ctx,
 		c.bucketName,
@@ -52,18 +57,26 @@ func (c *MinioClient) UploadFile(
 	if public {
 		baseURL := c.client.EndpointURL().String()
 		finalURL := fmt.Sprintf("%s/%s/%s", baseURL, c.bucketName, info.Key)
+		c.logger.Debug(fmt.Sprintf("public link: %s", finalURL))
 		return finalURL, nil
 	}
-	return c.getPrivateShareLink(ctx, fileName)
+	link, err := c.getPrivateShareLink(ctx, fileName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get private share link: %w", err)
+	}
+	c.logger.Debug(fmt.Sprintf("private link: %s", link))
+	return link, nil
 }
 
 // DownloadFile downloads a file from minio by the given input url,
 // if customPath = "" file path will be the same as the URL object path
 func (c *MinioClient) DownloadFile(ctx context.Context, input string, customPath string) error {
+	c.logger.Debug(fmt.Sprintf("trying to download file: %s", input))
 	u, err := url.Parse(input)
 	if err != nil {
 		return fmt.Errorf("failed to parse url: %w", err)
 	}
+	c.logger.Debug(fmt.Sprintf("parsed url: %s", u.String()))
 	path := u.EscapedPath()
 	pathSplit := strings.Split(path, "/")
 	bucketName := pathSplit[1]
@@ -71,8 +84,10 @@ func (c *MinioClient) DownloadFile(ctx context.Context, input string, customPath
 	if bucketName == "" || objectName == "" {
 		return fmt.Errorf("invalid url, could not fetch bucket or object name")
 	}
+	c.logger.Debug(fmt.Sprintf("bucket name: %s, object name: %s", bucketName, objectName))
 	if customPath == "" {
 		customPath = "./files/" + objectName
+		c.logger.Debug(fmt.Sprintf("custom path not provided, using default: %s", customPath))
 	}
 	err = c.client.FGetObject(ctx, bucketName, objectName, customPath, miniolib.GetObjectOptions{})
 	return err
@@ -128,6 +143,11 @@ func (c *MinioClient) getPrivateShareLink(ctx context.Context, obj string) (stri
 
 // NewClient creates a new minio client
 func NewClient(dir string, debug bool, cfg *environment.EnvConfig) (*MinioClient, error) {
+	logger := log.NewLogger().
+		WithDirectory(dir).
+		WithName("minio").
+		WithDebug(debug).
+		WithConsoleOutput(debug)
 	mClient, err := miniolib.New(cfg.MinioEndpoint, &miniolib.Options{
 		Creds:  credentials.NewStaticV4(cfg.MinioAccessKey, cfg.MinioAccessSecret, ""),
 		Secure: cfg.MinioUseSSL,
@@ -136,6 +156,7 @@ func NewClient(dir string, debug bool, cfg *environment.EnvConfig) (*MinioClient
 		return nil, fmt.Errorf("failed to create minio client: %w", err)
 	}
 	return &MinioClient{
+		logger:        logger,
 		client:        mClient,
 		bucketName:    cfg.MinioBucketName,
 		bucketRegion:  cfg.MinioRegion,

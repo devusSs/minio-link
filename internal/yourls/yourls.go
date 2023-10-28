@@ -11,11 +11,13 @@ import (
 	"time"
 
 	"github.com/devusSs/minio-link/internal/config/environment"
+	"github.com/devusSs/minio-link/pkg/log"
 	"github.com/google/uuid"
 )
 
 // Wrapper for YOURLS API (basic)
 type YOURLSClient struct {
+	logger    *log.Logger
 	client    *http.Client
 	baseURL   string
 	signature string
@@ -32,6 +34,7 @@ func (c *YOURLSClient) ShortenURL(ctx context.Context, input string) (string, er
 	if err != nil {
 		return "", fmt.Errorf("invalid base url: %w", err)
 	}
+	c.logger.Debug(fmt.Sprintf("(base) upload url: %s", u.String()))
 
 	v := make(map[string]string)
 	v["signature"] = c.signature
@@ -45,12 +48,17 @@ func (c *YOURLSClient) ShortenURL(ctx context.Context, input string) (string, er
 	if err != nil {
 		return "", fmt.Errorf("failed to build request: %w", err)
 	}
+	c.logger.Debug(
+		fmt.Sprintf("url: %s, method: %s, body: %s", req.URL.String(), req.Method, req.Body),
+	)
 
 	res, err := c.client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %w", err)
 	}
 	defer res.Body.Close()
+
+	c.logger.Debug(fmt.Sprintf("response: %s (%d)", res.Status, res.StatusCode))
 
 	if res.StatusCode != http.StatusOK {
 		var errRes shortenURLErrorResponse
@@ -65,9 +73,12 @@ func (c *YOURLSClient) ShortenURL(ctx context.Context, input string) (string, er
 		return "", fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
+	c.logger.Debug(fmt.Sprintf("shortened url: %s", shortenRes.Shorturl))
+
 	return shortenRes.Shorturl, nil
 }
 
+// ExpandURL expands a shortened URL via YOURLS
 func (c *YOURLSClient) ExpandURL(ctx context.Context, input string) (string, error) {
 	_, err := checkURL(input)
 	if err != nil {
@@ -78,6 +89,7 @@ func (c *YOURLSClient) ExpandURL(ctx context.Context, input string) (string, err
 	if err != nil {
 		return "", fmt.Errorf("invalid base url: %w", err)
 	}
+	c.logger.Debug(fmt.Sprintf("(base) upload url: %s", u.String()))
 
 	v := make(map[string]string)
 	v["signature"] = c.signature
@@ -89,12 +101,17 @@ func (c *YOURLSClient) ExpandURL(ctx context.Context, input string) (string, err
 	if err != nil {
 		return "", fmt.Errorf("failed to build request: %w", err)
 	}
+	c.logger.Debug(
+		fmt.Sprintf("url: %s, method: %s, body: %s", req.URL.String(), req.Method, req.Body),
+	)
 
 	res, err := c.client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %w", err)
 	}
 	defer res.Body.Close()
+
+	c.logger.Debug(fmt.Sprintf("response: %s (%d)", res.Status, res.StatusCode))
 
 	if res.StatusCode != http.StatusOK {
 		var errRes shortenURLErrorResponse
@@ -109,12 +126,19 @@ func (c *YOURLSClient) ExpandURL(ctx context.Context, input string) (string, err
 		return "", fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
+	c.logger.Debug(fmt.Sprintf("expanded url: %s", expandRes.Longurl))
+
 	return expandRes.Longurl, nil
 }
 
 // NewClient creates a new YOURLSClient
 func NewClient(dir string, debug bool, cfg *environment.EnvConfig) *YOURLSClient {
 	return &YOURLSClient{
+		logger: log.NewLogger().
+			WithDirectory(dir).
+			WithName("yourls").
+			WithDebug(debug).
+			WithConsoleOutput(debug),
 		client:    &http.Client{Timeout: 5 * time.Second},
 		baseURL:   cfg.YourlsEndpoint,
 		signature: cfg.YourlsSignatureKey,
