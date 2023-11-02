@@ -70,6 +70,13 @@ dev-download: build
 	@./.testing/minio-link download ${TEST_DOWNLOAD_LINK} -c="./.env" -l="./.logs_dev" -d
 
 # DO NOT CHANGE.
+dev-list: build
+	@-mkdir ./.testing
+	@cp ./.release/minio-link_$(BUILD_OS)_$(BUILD_ARCH)/minio-link ./.testing/minio-link
+	@clear
+	@./.testing/minio-link list -c="./.env" -l="./.logs_dev" -d
+
+# DO NOT CHANGE.
 check:
 	@echo "Checking for potential errors, unused vars, etc."
 	@echo "This might take a moment, please wait"
