@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/rs/zerolog"
@@ -55,7 +56,12 @@ func (l *Logger) Debug(msg string) {
 	if e := l.output.Debug(); e.Enabled() {
 		e.Msg(msg)
 		if l.options.wantConsoleOutput {
-			fmt.Printf("[%s] %s\n", color.WhiteString(strings.ToUpper(l.options.name)), msg)
+			fmt.Printf(
+				"%s [%s] %s\n",
+				time.Now().Format(time.RFC3339),
+				color.WhiteString(strings.ToUpper(l.options.name)),
+				msg,
+			)
 		}
 	}
 }
@@ -66,7 +72,12 @@ func (l *Logger) Debug(msg string) {
 func (l *Logger) Info(msg string) {
 	l.output.Info().Msg(msg)
 	if l.options.wantConsoleOutput {
-		fmt.Printf("[%s] %s\n", color.BlueString(strings.ToUpper(l.options.name)), msg)
+		fmt.Printf(
+			"%s [%s] %s\n",
+			time.Now().Format(time.RFC3339),
+			color.BlueString(strings.ToUpper(l.options.name)),
+			msg,
+		)
 	}
 }
 
@@ -76,7 +87,12 @@ func (l *Logger) Info(msg string) {
 func (l *Logger) Warn(msg string) {
 	l.output.Warn().Msg(msg)
 	if l.options.wantConsoleOutput {
-		fmt.Printf("[%s] %s\n", color.YellowString(strings.ToUpper(l.options.name)), msg)
+		fmt.Printf(
+			"%s [%s] %s\n",
+			time.Now().Format(time.RFC3339),
+			color.YellowString(strings.ToUpper(l.options.name)),
+			msg,
+		)
 	}
 }
 
@@ -88,7 +104,7 @@ func (l *Logger) Error(msg string) {
 	if l.options.wantConsoleOutput {
 		_, err := fmt.Fprintf(
 			os.Stderr,
-			"[%s] %s\n",
+			"%s [%s] %s\n", time.Now().Format(time.RFC3339),
 			color.RedString(strings.ToUpper(l.options.name)),
 			msg,
 		)
