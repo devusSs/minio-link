@@ -2,7 +2,7 @@
 .env
 .testing/
 .release/
-.dev_logs/
+.logs_dev/
 logs/
 files/
 *.txt
