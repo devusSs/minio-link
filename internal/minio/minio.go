@@ -79,6 +79,9 @@ func (c *MinioClient) DownloadFile(ctx context.Context, input string, customPath
 	c.logger.Debug(fmt.Sprintf("parsed url: %s", u.String()))
 	path := u.EscapedPath()
 	pathSplit := strings.Split(path, "/")
+	if len(pathSplit) < 2 {
+		return fmt.Errorf("invalid url, could not fetch bucket or object name")
+	}
 	bucketName := pathSplit[1]
 	objectName := pathSplit[2]
 	if bucketName == "" || objectName == "" {
@@ -91,6 +94,41 @@ func (c *MinioClient) DownloadFile(ctx context.Context, input string, customPath
 	}
 	err = c.client.FGetObject(ctx, bucketName, objectName, customPath, miniolib.GetObjectOptions{})
 	return err
+}
+
+// Gets objects from urls and checks if they still exist
+func (c *MinioClient) GetObjects(ctx context.Context, objectLinks []string) error {
+	fmt.Println("Objects uploaded using minio-link:")
+	fmt.Println("==================================")
+	for _, link := range objectLinks {
+		u, err := url.Parse(link)
+		if err != nil {
+			return fmt.Errorf("failed to parse url: %w", err)
+		}
+		path := u.EscapedPath()
+		pathSplit := strings.Split(path, "/")
+		if len(pathSplit) < 2 {
+			return fmt.Errorf("invalid url, could not fetch bucket or object name")
+		}
+		bucketName := pathSplit[1]
+		objectName := pathSplit[2]
+		if bucketName == "" || objectName == "" {
+			return fmt.Errorf("invalid url, could not fetch bucket or object name")
+		}
+		obj, err := c.client.StatObject(ctx, bucketName, objectName, miniolib.StatObjectOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to get object: %w", err)
+		}
+		// TODO: improve design, add option to regen links
+		fmt.Printf(
+			"Object: %s - Bucket: %s - Expiry: %v - Last Modified: %v\n",
+			obj.Key,
+			bucketName,
+			obj.Expires,
+			obj.LastModified,
+		)
+	}
+	return nil
 }
 
 func (c *MinioClient) setBucketPublic(ctx context.Context, policy string) error {
