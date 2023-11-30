@@ -18,7 +18,7 @@ go mod tidy
 # Build the application
 CGO_ENABLED=0 GOOS="${BUILD_OS}" GOARCH="${BUILD_ARCH}" go build \
   -v -trimpath \
-  -ldflags="-s -w -X 'main.buildVersion=${ML_BUILD_VERSION}' -X 'main.buildDate=$(date)' -X 'main.buildGitCommit=$(git rev-parse HEAD)'" \
+  -ldflags="-s -w -X 'github.com/devusSs/minio-link/cmd.BuildVersion=${ML_BUILD_VERSION}' -X 'github.com/devusSs/minio-link/cmd.BuildDate=$(date)' -X 'github.com/devusSs/minio-link/cmd.BuildGitCommit=$(git rev-parse HEAD)'" \
   -o "./.release/minio-link_${BUILD_OS}_${BUILD_ARCH}/" ./...
 
 # Display completion message
