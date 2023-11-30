@@ -13,7 +13,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.64
 	github.com/rhysd/go-github-selfupdate v1.2.3
 	github.com/rs/zerolog v1.31.0
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
