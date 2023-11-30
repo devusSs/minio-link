@@ -8,7 +8,7 @@ require (
 	github.com/caarlos0/env/v9 v9.0.0
 	github.com/fatih/color v1.15.0
 	github.com/gabriel-vasile/mimetype v1.4.3
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v7 v7.0.63
 	github.com/rhysd/go-github-selfupdate v1.2.3
