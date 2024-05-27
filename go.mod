@@ -12,7 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v7 v7.0.69
 	github.com/rhysd/go-github-selfupdate v1.2.3
-	github.com/rs/zerolog v1.32.0
+	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
