@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	filepathlib "path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -29,7 +30,13 @@ var downloadCmd = &cobra.Command{
 		debug, err := cmd.Flags().GetBool("debug")
 		cobra.CheckErr(err)
 		filepath := cmd.Flag("filepath").Value.String()
-		fmt.Println(filepath)
+
+		if strings.Contains(logsPath, "./") {
+			exe, err := os.Executable()
+			cobra.CheckErr(err)
+
+			logsPath = filepathlib.Join(filepathlib.Dir(exe), logsPath)
+		}
 
 		downloadLogger := log.NewLogger().
 			WithDirectory(logsPath).

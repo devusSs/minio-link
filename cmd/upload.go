@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -31,6 +32,13 @@ var uploadCmd = &cobra.Command{
 		cobra.CheckErr(err)
 		private, err := cmd.Flags().GetBool("private")
 		cobra.CheckErr(err)
+
+		if strings.Contains(logsPath, "./") {
+			exe, err := os.Executable()
+			cobra.CheckErr(err)
+
+			logsPath = filepath.Join(filepath.Dir(exe), logsPath)
+		}
 
 		uploadLogger := log.NewLogger().
 			WithDirectory(logsPath).

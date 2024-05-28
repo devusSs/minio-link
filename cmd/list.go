@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -28,6 +29,13 @@ var listCmd = &cobra.Command{
 		cobra.CheckErr(err)
 		limit, err := cmd.Flags().GetInt("limit")
 		cobra.CheckErr(err)
+
+		if strings.Contains(logsPath, "./") {
+			exe, err := os.Executable()
+			cobra.CheckErr(err)
+
+			logsPath = filepath.Join(filepath.Dir(exe), logsPath)
+		}
 
 		listLogger := log.NewLogger().
 			WithDirectory(logsPath).
