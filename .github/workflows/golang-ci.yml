@@ -1,0 +1,44 @@
+name: Go CI
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+
+permissions:
+  contents: read
+
+jobs:
+  golangci-lint:
+    name: Lint Code with golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64
+      - name: Run golangci-lint
+        run: golangci-lint run --timeout 5m
+
+  install-and-test:
+    name: Install Dependencies and Run Tests
+    runs-on: ubuntu-latest
+    needs: golangci-lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Install dependencies
+        run: go get ./...
+      - name: Run tests with Go CLI
+        run: go test -v ./...

@@ -1,5 +1,5 @@
 .DS_STORE
-.env
+
 .testing/
 .release/
 .logs_dev/
@@ -7,3 +7,18 @@ logs/
 files/
 *.txt
 *.json
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+*.test
+
+*.out
+
+go.work
+go.work.sum
+
+.env

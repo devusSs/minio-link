@@ -42,10 +42,10 @@ The CLI application provides commands which can be queried via `minio-link --hel
 Using `minio-link help <command>` may also be useful to check configuration options / flags for each command.
 
 The most useful ones for the average user will be the following:
+
 - `update` to upload a file to private or public (default) bucket on your [Minio](https://min.io/) instance and shorten the url via [YOURLS](https://yourls.org/)
 - `download` to download a file via it's [YOURLS](https://yourls.org/) url (you may specify a custom download output via flags)
 - `update` to update the application automatically if there is a new precompiled release
-
 
 ### Note
 
@@ -54,6 +54,7 @@ This program will automatically copy the final links (either the [Minio](https:/
 ## Building
 
 If you want to build the app yourself you will need the following tools:
+
 - The [Go](https://go.dev) programming language to compile the app.
 - The [Make](https://www.gnu.org/software/make/) toolchain to make it easier compiling the program.
 
@@ -65,7 +66,7 @@ Check future plans and features in the [roadplan file](https://github.com/devusS
 
 ## Issues
 
-If you have any issues please either [open an issue](https://github.com/devusSs/minio-link/issues) or [send me an e-mail if the issue is urgent](mailto:devuscs@gmail.com). Usually a simple  search on your favourite search engine or reading the (very basic) documentation helps tho.
+If you have any issues please either [open an issue](https://github.com/devusSs/minio-link/issues). Usually a simple search on your favourite search engine or reading the (very basic) documentation helps tho.
 
 ## Disclaimer
 
