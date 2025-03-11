@@ -10,7 +10,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/minio/minio-go/v7 v7.0.87
+	github.com/minio/minio-go/v7 v7.0.88
 	github.com/rhysd/go-github-selfupdate v1.2.3
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.9.1
