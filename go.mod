@@ -1,7 +1,6 @@
 module github.com/devusSs/minio-link
 
 go 1.24.1
-
 require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/atotto/clipboard v0.1.4
@@ -10,7 +9,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.8
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/minio/minio-go/v7 v7.0.88
+	github.com/minio/minio-go/v7 v7.0.89
 	github.com/rhysd/go-github-selfupdate v1.2.3
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
